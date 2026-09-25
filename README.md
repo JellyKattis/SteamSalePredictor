@@ -47,3 +47,5 @@ Steam-Sale-Predictor/
 ├── .gitignore
 ├── README.md
 └── requirements.txt
+
+
