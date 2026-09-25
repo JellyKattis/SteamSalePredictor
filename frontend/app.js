@@ -2,7 +2,6 @@ const API = "";
 
 const TARGET_CURRENCY = "SEK";
 
-
 /* =====================================================
    ELEMENTS
 ===================================================== */
@@ -105,7 +104,6 @@ let priceChart = null;
 ===================================================== */
 
 function escapeHTML(value) {
-
     return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -119,7 +117,6 @@ function formatPrice(
     value,
     currency = "SEK"
 ) {
-
     if (
         value === null ||
         value === undefined ||
@@ -127,7 +124,6 @@ function formatPrice(
     ) {
         return "–";
     }
-
 
     return new Intl.NumberFormat(
         "sv-SE",
@@ -141,15 +137,12 @@ function formatPrice(
 
 
 function formatDate(value) {
-
     if (!value) {
         return "–";
     }
 
-
     const date =
         new Date(value);
-
 
     if (
         Number.isNaN(
@@ -158,7 +151,6 @@ function formatDate(value) {
     ) {
         return value;
     }
-
 
     return new Intl.DateTimeFormat(
         "sv-SE",
@@ -175,16 +167,13 @@ function formatDateRange(
     start,
     end
 ) {
-
     if (!start) {
         return "–";
     }
 
-
     if (!end) {
         return formatDate(start);
     }
-
 
     return (
         formatDate(start)
@@ -194,25 +183,61 @@ function formatDateRange(
 }
 
 
+/* =====================================================
+   GAME IMAGE
+===================================================== */
+
 function getGameImage(game) {
-
-    const assets =
-        game?.assets;
-
+    const assets = game?.assets;
 
     if (!assets) {
         return null;
     }
 
+    /* Använd största bilden först */
 
-    function findImage(
-        value
+    if (
+        typeof assets.banner600 === "string" &&
+        /^https?:\/\//i.test(
+            assets.banner600
+        )
     ) {
+        return assets.banner600;
+    }
 
+    if (
+        typeof assets.banner400 === "string" &&
+        /^https?:\/\//i.test(
+            assets.banner400
+        )
+    ) {
+        return assets.banner400;
+    }
+
+    if (
+        typeof assets.banner300 === "string" &&
+        /^https?:\/\//i.test(
+            assets.banner300
+        )
+    ) {
+        return assets.banner300;
+    }
+
+    if (
+        typeof assets.boxart === "string" &&
+        /^https?:\/\//i.test(
+            assets.boxart
+        )
+    ) {
+        return assets.boxart;
+    }
+
+    /* Fallback om strukturen skulle ändras */
+
+    function findImage(value) {
         if (!value) {
             return null;
         }
-
 
         if (
             typeof value === "string" &&
@@ -221,37 +246,49 @@ function getGameImage(game) {
             return value;
         }
 
-
         if (
             typeof value === "object"
         ) {
-
             for (
-                const key
-                of Object.keys(value)
+                const key of Object.keys(value)
             ) {
-
                 const result =
-                    findImage(
-                        value[key]
-                    );
-
+                    findImage(value[key]);
 
                 if (result) {
                     return result;
                 }
-
             }
-
         }
-
 
         return null;
     }
 
+    return findImage(assets);
+}
 
-    return findImage(
-        assets
+
+/* =====================================================
+   GAME HERO IMAGE
+===================================================== */
+
+function setGameHeroImage(image) {
+    if (
+        !gameHero ||
+        !image
+    ) {
+        return;
+    }
+
+    const safeImage =
+        image.replaceAll(
+            '"',
+            '\\"'
+        );
+
+    gameHero.style.setProperty(
+        "--game-image",
+        `url("${safeImage}")`
     );
 }
 
@@ -264,21 +301,17 @@ function showError(
     title,
     message
 ) {
-
     errorTitle.textContent =
         title ||
         "Något gick fel";
-
 
     errorMessage.textContent =
         message ||
         "Försök igen.";
 
-
     errorSection.classList.remove(
         "hidden"
     );
-
 
     window.scrollTo({
         top: 0,
@@ -288,7 +321,6 @@ function showError(
 
 
 function hideError() {
-
     errorSection.classList.add(
         "hidden"
     );
@@ -298,52 +330,34 @@ function hideError() {
 async function fetchJSON(
     url
 ) {
-
     let response;
 
-
     try {
-
         response =
             await fetch(url);
-
     }
-
     catch (error) {
-
         throw new Error(
             "Kunde inte ansluta till servern."
         );
-
     }
-
 
     let data = null;
 
-
     try {
-
         data =
             await response.json();
-
     }
-
     catch {
-
         data = null;
-
     }
-
 
     if (!response.ok) {
-
         throw new Error(
             data?.detail ||
             "Servern kunde inte slutföra begäran."
         );
-
     }
-
 
     return data;
 }
@@ -356,13 +370,10 @@ async function fetchJSON(
 function setSearchLoading(
     loading
 ) {
-
     searchButton.disabled =
         loading;
 
-
     if (loading) {
-
         searchButtonText.classList.add(
             "hidden"
         );
@@ -370,11 +381,8 @@ function setSearchLoading(
         searchButtonSpinner.classList.remove(
             "hidden"
         );
-
     }
-
     else {
-
         searchButtonText.classList.remove(
             "hidden"
         );
@@ -382,9 +390,7 @@ function setSearchLoading(
         searchButtonSpinner.classList.add(
             "hidden"
         );
-
     }
-
 }
 
 
@@ -393,60 +399,44 @@ function setSearchLoading(
 ===================================================== */
 
 async function searchGames() {
-
     const query =
         searchInput.value.trim();
 
-
     hideError();
 
-
     if (!query) {
-
         searchStatus.textContent =
             "Skriv namnet på ett spel först.";
 
         return;
-
     }
 
-
-    setSearchLoading(
-        true
-    );
-
+    setSearchLoading(true);
 
     searchStatus.textContent =
         "Söker...";
 
-
     resultsGrid.innerHTML =
         "";
-
 
     resultsSection.classList.add(
         "hidden"
     );
 
-
     gameSection.classList.add(
         "hidden"
     );
 
-
     try {
-
         const data =
             await fetchJSON(
                 `${API}/search?query=${encodeURIComponent(query)}`
             );
 
-
         if (
             !data.games ||
             data.games.length === 0
         ) {
-
             showError(
                 "Inga spel hittades",
                 `Vi kunde inte hitta något spel som matchar "${query}".`
@@ -456,42 +446,27 @@ async function searchGames() {
                 "";
 
             return;
-
         }
-
 
         renderSearchResults(
             data.games
         );
 
-
         searchStatus.textContent =
             `${data.games.length} resultat hittades.`;
-
-
     }
-
     catch (error) {
-
         showError(
             "Kunde inte söka",
             error.message
         );
 
-
         searchStatus.textContent =
             "";
-
     }
-
     finally {
-
-        setSearchLoading(
-            false
-        );
-
+        setSearchLoading(false);
     }
-
 }
 
 
@@ -502,48 +477,35 @@ async function searchGames() {
 function renderSearchResults(
     games
 ) {
-
     resultsGrid.innerHTML =
         "";
 
-
     games.forEach(
         game => {
-
             const card =
                 document.createElement(
                     "button"
                 );
 
-
             card.type =
                 "button";
 
-
             card.className =
                 "game-result-card";
-
 
             const image =
                 getGameImage(
                     game
                 );
 
-
             if (image) {
-
                 card.style.backgroundImage =
                     `url("${image.replaceAll('"', '\\"')}")`;
-
             }
 
-
             card.innerHTML = `
-
                 <div class="game-result-overlay">
-
                     <div>
-
                         <span class="game-result-small">
                             STEAM
                         </span>
@@ -551,48 +513,37 @@ function renderSearchResults(
                         <h3>
                             ${escapeHTML(game.title)}
                         </h3>
-
                     </div>
 
                     <span class="game-result-arrow">
                         →
                     </span>
-
                 </div>
-
             `;
-
 
             card.addEventListener(
                 "click",
                 () => {
-
                     analyzeGame(
                         game
                     );
-
                 }
             );
-
 
             resultsGrid.appendChild(
                 card
             );
-
         }
     );
-
 
     resultsSection.classList.remove(
         "hidden"
     );
 
-
     resultsSection.scrollIntoView({
         behavior: "smooth",
         block: "start"
     });
-
 }
 
 
@@ -603,81 +554,73 @@ function renderSearchResults(
 async function analyzeGame(
     game
 ) {
-
     hideError();
-
 
     resultsSection.classList.add(
         "hidden"
     );
 
-
     gameSection.classList.add(
         "hidden"
     );
 
-
     loadingSection.classList.remove(
         "hidden"
     );
-
 
     loadingSection.scrollIntoView({
         behavior: "smooth",
         block: "start"
     });
 
-
     try {
-
         const data =
             await fetchJSON(
                 `${API}/predict?title=${encodeURIComponent(game.title)}&game_id=${encodeURIComponent(game.id)}`
             );
 
-
         await loadExchangeRate(
             data
         );
 
+        /* Lägg in spelbilden i analysvyn */
+
+        const image =
+            getGameImage(game);
+
+        if (image) {
+            setGameHeroImage(
+                image
+            );
+        }
 
         renderPrediction(
             data
         );
 
-
         loadingSection.classList.add(
             "hidden"
         );
-
 
         gameSection.classList.remove(
             "hidden"
         );
 
-
         gameSection.scrollIntoView({
             behavior: "smooth",
             block: "start"
         });
-
-
     }
-
     catch (error) {
-
         loadingSection.classList.add(
             "hidden"
         );
-
 
         showError(
             "Analysen kunde inte slutföras",
             error.message
         );
-
     }
-
 }
 
 
@@ -688,7 +631,6 @@ async function analyzeGame(
 async function loadExchangeRate(
     data
 ) {
-
     if (
         !data.current &&
         !data.regular
@@ -696,28 +638,21 @@ async function loadExchangeRate(
         return;
     }
 
-
     if (
         !data.currency ||
         data.currency === TARGET_CURRENCY
     ) {
-
         return;
-
     }
 
-
     try {
-
         const rateData =
             await fetchJSON(
                 `${API}/exchange-rate?base=${encodeURIComponent(data.currency)}&target=${TARGET_CURRENCY}`
             );
 
-
         const rate =
             Number(rateData.rate);
-
 
         if (
             !Number.isFinite(rate)
@@ -725,47 +660,38 @@ async function loadExchangeRate(
             return;
         }
 
-
-        if (data.current !== null) {
-
+        if (
+            data.current !== null
+        ) {
             data.current =
-                Number(data.current) * rate;
-
+                Number(data.current) *
+                rate;
         }
 
-
-        if (data.regular !== null) {
-
+        if (
+            data.regular !== null
+        ) {
             data.regular =
-                Number(data.regular) * rate;
-
+                Number(data.regular) *
+                rate;
         }
-
 
         if (
             data.lowest_price !== null &&
             data.lowest_price !== undefined
         ) {
-
             data.lowest_price =
-                Number(data.lowest_price) * rate;
-
+                Number(data.lowest_price) *
+                rate;
         }
-
 
         data.currency =
             TARGET_CURRENCY;
-
-
     }
-
     catch {
-
-        // Om valuta-API:t inte fungerar
-        // fortsätter sidan med originalvalutan.
-
+        /* Om valuta-API:t inte fungerar
+           fortsätter sidan med originalvalutan. */
     }
-
 }
 
 
@@ -776,14 +702,12 @@ async function loadExchangeRate(
 function renderPrediction(
     data
 ) {
-
     gameTitle.textContent =
-        data.title || "Okänt spel";
-
+        data.title ||
+        "Okänt spel";
 
     gameSubtitle.textContent =
         `${data.events || 0} identifierade rea-händelser`;
-
 
     currentPrice.textContent =
         formatPrice(
@@ -791,57 +715,41 @@ function renderPrediction(
             data.currency
         );
 
-
     if (
         data.regular !== null &&
         data.regular !== undefined
     ) {
-
         regularPrice.textContent =
             `Ordinarie pris: ${formatPrice(data.regular, data.currency)}`;
-
     }
-
     else {
-
         regularPrice.textContent =
             "Ordinarie pris saknas";
-
     }
-
 
     likelyDiscount.textContent =
         data.likely !== null
             ? `${data.likely}%`
             : "–";
 
-
     if (
         data.regular !== null &&
         data.likely !== null
     ) {
-
         const predicted =
-            Number(data.regular)
-            *
+            Number(data.regular) *
             (
                 1 -
                 Number(data.likely) / 100
             );
 
-
         predictedPrice.textContent =
             `Prognostiserat pris: ${formatPrice(predicted, data.currency)}`;
-
     }
-
     else {
-
         predictedPrice.textContent =
             "Pris kunde inte beräknas";
-
     }
-
 
     nextSale.textContent =
         formatDateRange(
@@ -849,30 +757,25 @@ function renderPrediction(
             data.next_end
         );
 
-
     confidence.textContent =
         data.confidence !== null
             ? `${data.confidence}%`
             : "–";
 
-
     confidenceLabel.textContent =
         data.confidence_label ||
         "Ingen bedömning";
-
 
     modelScore.textContent =
         data.confidence !== null
             ? `${data.confidence}%`
             : "–";
 
-
     bestDiscount.textContent =
         data.best_discount !== null &&
         data.best_discount !== undefined
             ? `${data.best_discount}%`
             : "–";
-
 
     lowestPrice.textContent =
         data.lowest_price !== null &&
@@ -883,40 +786,30 @@ function renderPrediction(
             )
             : "–";
 
-
     if (
         data.last_sale &&
         data.last_sale.date
     ) {
-
         lastSale.textContent =
             formatDate(
                 data.last_sale.date
             );
-
     }
-
     else {
-
         lastSale.textContent =
             "–";
-
     }
-
 
     saleCount.textContent =
         data.events ?? "–";
-
 
     renderProbabilities(
         data
     );
 
-
     renderChart(
         data
     );
-
 }
 
 
@@ -927,15 +820,12 @@ function renderPrediction(
 function renderProbabilities(
     data
 ) {
-
     probabilityList.innerHTML =
         "";
-
 
     if (
         !data.probabilities
     ) {
-
         probabilityList.innerHTML = `
             <div class="empty-state">
                 Ingen prognosdata finns.
@@ -943,9 +833,7 @@ function renderProbabilities(
         `;
 
         return;
-
     }
-
 
     const entries =
         Object.entries(
@@ -961,13 +849,10 @@ function renderProbabilities(
                 Number(a[1])
         );
 
-
     entries.forEach(
         ([discount, probability]) => {
-
             const value =
                 Number(probability);
-
 
             const percentage =
                 Math.max(
@@ -978,21 +863,16 @@ function renderProbabilities(
                     )
                 );
 
-
             const row =
                 document.createElement(
                     "div"
                 );
 
-
             row.className =
                 "probability-row";
 
-
             row.innerHTML = `
-
                 <div class="probability-top">
-
                     <span>
                         ${escapeHTML(discount)}% rabatt
                     </span>
@@ -1000,29 +880,21 @@ function renderProbabilities(
                     <strong>
                         ${percentage.toFixed(1)}%
                     </strong>
-
                 </div>
 
-
                 <div class="probability-bar">
-
                     <div
                         class="probability-fill"
                         style="width:${percentage}%"
                     ></div>
-
                 </div>
-
             `;
-
 
             probabilityList.appendChild(
                 row
             );
-
         }
     );
-
 }
 
 
@@ -1033,39 +905,28 @@ function renderProbabilities(
 function renderChart(
     data
 ) {
-
     const canvas =
         document.getElementById(
             "priceChart"
         );
 
-
     if (!canvas) {
         return;
     }
 
-
     if (priceChart) {
-
         priceChart.destroy();
-
         priceChart = null;
-
     }
-
 
     const history =
         data.history || [];
 
-
     if (
         history.length === 0
     ) {
-
         return;
-
     }
-
 
     const labels =
         history.map(
@@ -1075,20 +936,17 @@ function renderChart(
                 )
         );
 
-
     const prices =
         history.map(
             item =>
                 Number(item.price)
         );
 
-
     const regular =
         history.map(
             item =>
                 Number(item.regular)
         );
-
 
     const salePrices =
         history.map(
@@ -1098,22 +956,17 @@ function renderChart(
                     : null
         );
 
-
     priceChart =
         new Chart(
             canvas,
             {
-
                 type: "line",
 
                 data: {
-
                     labels,
 
                     datasets: [
-
                         {
-
                             label:
                                 "Pris",
 
@@ -1128,12 +981,9 @@ function renderChart(
 
                             pointRadius:
                                 3
-
                         },
 
-
                         {
-
                             label:
                                 "Ordinarie pris",
 
@@ -1148,12 +998,9 @@ function renderChart(
 
                             pointRadius:
                                 0
-
                         },
 
-
                         {
-
                             label:
                                 "Reapris",
 
@@ -1168,16 +1015,11 @@ function renderChart(
 
                             pointRadius:
                                 4
-
                         }
-
                     ]
-
                 },
 
-
                 options: {
-
                     responsive:
                         true,
 
@@ -1185,60 +1027,40 @@ function renderChart(
                         false,
 
                     interaction: {
-
                         mode:
                             "index",
 
                         intersect:
                             false
-
                     },
-
 
                     plugins: {
-
                         legend: {
-
                             labels: {
-
                                 color:
                                     "#d6d7d8"
-
                             }
-
                         }
-
                     },
 
-
                     scales: {
-
                         x: {
-
                             ticks: {
-
                                 color:
                                     "#8f98a0",
 
                                 maxRotation:
                                     45
-
                             },
 
                             grid: {
-
                                 color:
                                     "rgba(255,255,255,.05)"
-
                             }
-
                         },
 
-
                         y: {
-
                             ticks: {
-
                                 color:
                                     "#8f98a0",
 
@@ -1248,25 +1070,17 @@ function renderChart(
                                             value,
                                             data.currency
                                         )
-
                             },
 
                             grid: {
-
                                 color:
                                     "rgba(255,255,255,.05)"
-
                             }
-
                         }
-
                     }
-
                 }
-
             }
         );
-
 }
 
 
@@ -1275,41 +1089,32 @@ function renderChart(
 ===================================================== */
 
 function resetSearch() {
-
     gameSection.classList.add(
         "hidden"
     );
-
 
     resultsSection.classList.add(
         "hidden"
     );
 
-
     loadingSection.classList.add(
         "hidden"
     );
 
-
     hideError();
-
 
     searchInput.value =
         "";
 
-
     searchStatus.textContent =
         "";
 
-
     searchInput.focus();
-
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
-
 }
 
 
@@ -1322,24 +1127,24 @@ searchButton.addEventListener(
     searchGames
 );
 
-
 newSearchButton.addEventListener(
     "click",
     resetSearch
 );
 
-
 searchInput.addEventListener(
     "keydown",
     event => {
-
         if (
             event.key === "Enter"
         ) {
-
             searchGames();
-
         }
-
     }
 );
+
+
+/* =====================================================
+   STEAM SALE PREDICTOR
+   v0.9
+===================================================== */
