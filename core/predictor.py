@@ -119,10 +119,13 @@ def predict(title, game_id=None):
         weights
     )
 
-    likely = max(
-        probs,
-        key=probs.get
-    )
+    if probs:
+        likely = max(
+            probs.items(),
+            key=lambda item: item[1]
+        )[0]
+    else:
+        likely = 0
 
     conf_score, conf_label = confidence(
         events,

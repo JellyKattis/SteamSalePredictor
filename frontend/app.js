@@ -97,6 +97,52 @@ const probabilityList =
 const modelScore =
     document.getElementById("modelScore");
 
+
+/* =====================================================
+   STEAM INFO ELEMENTS
+===================================================== */
+
+const steamInfoSection =
+    document.getElementById("steamInfoSection");
+
+const steamInfoLoading =
+    document.getElementById("steamInfoLoading");
+
+const steamInfoContent =
+    document.getElementById("steamInfoContent");
+
+const steamInfoEmpty =
+    document.getElementById("steamInfoEmpty");
+
+const steamInfoImage =
+    document.getElementById("steamInfoImage");
+
+const steamInfoTitle =
+    document.getElementById("steamInfoTitle");
+
+const steamInfoDescription =
+    document.getElementById("steamInfoDescription");
+
+const steamInfoGenres =
+    document.getElementById("steamInfoGenres");
+
+const steamInfoDevelopers =
+    document.getElementById("steamInfoDevelopers");
+
+const steamInfoPublishers =
+    document.getElementById("steamInfoPublishers");
+
+const steamInfoReleaseDate =
+    document.getElementById("steamInfoReleaseDate");
+
+const steamInfoWebsite =
+    document.getElementById("steamInfoWebsite");
+
+
+/* =====================================================
+   STEAM LIBRARY ELEMENTS
+===================================================== */
+
 const steamLibrarySection =
     document.getElementById("steamLibrarySection");
 
@@ -228,10 +274,6 @@ async function loadSteamLibrary() {
 }
 
 
-/* =====================================================
-   STEAM LIBRARY VISIBILITY
-===================================================== */
-
 function hideSteamLibrary() {
 
     if (!steamLibrarySection) {
@@ -256,10 +298,6 @@ function showSteamLibrary() {
 }
 
 
-/* =====================================================
-   STEAM LIBRARY MATCHING
-===================================================== */
-
 function isGameInstalled(game) {
 
     if (
@@ -270,8 +308,14 @@ function isGameInstalled(game) {
         return false;
     }
 
-    return steamLibrary.has(
-        String(game.steam_appid)
+    const libraryGame =
+        steamLibrary.get(
+            String(game.steam_appid)
+        );
+
+    return Boolean(
+        libraryGame &&
+        libraryGame.installed === true
     );
 }
 
@@ -286,71 +330,52 @@ function getInstalledGame(game) {
         return null;
     }
 
-    return (
+    const libraryGame =
         steamLibrary.get(
             String(game.steam_appid)
-        ) || null
-    );
+        );
+
+    return (
+        libraryGame &&
+        libraryGame.installed === true
+    )
+        ? libraryGame
+        : null;
 }
 
-
-/* =====================================================
-   STEAM LIBRARY STATUS
-===================================================== */
 
 function getSteamLibraryStatus(game) {
 
     if (!game) {
-
         return {
             className: "not-installed",
             text: "🔴 EJ INSTALLERAD"
         };
     }
-
 
     const type =
         String(
             game.type || "game"
         ).toLowerCase();
 
-
-    /*
-     * DLC har alltid blå status.
-     *
-     * Backend behöver skicka:
-     * type: "dlc"
-     */
     if (type === "dlc") {
-
         return {
             className: "dlc",
             text: "🔵 DLC"
         };
     }
 
-
-    /*
-     * Ägt men inte installerat.
-     */
     if (!game.installed) {
-
         return {
             className: "not-installed",
             text: "🔴 EJ INSTALLERAD"
         };
     }
 
-
-    /*
-     * last_played kommer från Steam API
-     * och anges som Unix timestamp.
-     */
     const lastPlayed =
         Number(
             game.last_played || 0
         );
-
 
     if (
         Number.isFinite(lastPlayed) &&
@@ -366,15 +391,10 @@ function getSteamLibraryStatus(game) {
                 lastPlayed
             ) / 86400;
 
-
-        /*
-         * Spelat inom de senaste 30 dagarna.
-         */
         if (
             daysSinceLastPlayed >= 0 &&
             daysSinceLastPlayed < 30
         ) {
-
             return {
                 className: "recent",
                 text: "🟢 SPELAD NYLIGEN"
@@ -382,10 +402,6 @@ function getSteamLibraryStatus(game) {
         }
     }
 
-
-    /*
-     * Installerad men inte spelad nyligen.
-     */
     return {
         className: "installed",
         text: "🟡 INSTALLERAD"
@@ -393,13 +409,7 @@ function getSteamLibraryStatus(game) {
 }
 
 
-/* =====================================================
-   OPEN GAME FROM STEAM LIBRARY
-===================================================== */
-
-async function openLibraryGame(
-    libraryGame
-) {
+async function openLibraryGame(libraryGame) {
 
     if (
         !libraryGame ||
@@ -409,7 +419,6 @@ async function openLibraryGame(
     }
 
     hideError();
-
     hideSteamLibrary();
 
     loadingSection.classList.remove(
@@ -429,38 +438,38 @@ async function openLibraryGame(
         block: "start"
     });
 
-
     try {
 
         searchStatus.textContent =
             `Hämtar analys för ${libraryGame.name}...`;
 
-
         const data =
             await fetchJSON(
-                `${API}/search?query=${encodeURIComponent(libraryGame.name)}`
+                `${API}/search?query=${encodeURIComponent(
+                    libraryGame.name
+                )}`
             );
-
 
         if (
             !data.games ||
             data.games.length === 0
         ) {
-
             throw new Error(
                 "Spelet hittades inte i prisdatabasen."
             );
         }
 
-
         let matchingGame =
             data.games.find(
                 game =>
                     game.steam_appid &&
-                    String(game.steam_appid) ===
-                        String(libraryGame.appid)
+                    String(
+                        game.steam_appid
+                    ) ===
+                    String(
+                        libraryGame.appid
+                    )
             );
-
 
         if (!matchingGame) {
 
@@ -476,19 +485,16 @@ async function openLibraryGame(
                 );
         }
 
-
         if (!matchingGame) {
-
             matchingGame =
                 data.games[0];
         }
 
-
         await analyzeGame(
             matchingGame
         );
-
     }
+
     catch (error) {
 
         loadingSection.classList.add(
@@ -500,6 +506,7 @@ async function openLibraryGame(
             error.message
         );
     }
+
     finally {
 
         searchStatus.textContent =
@@ -514,7 +521,9 @@ async function openLibraryGame(
 
 function escapeHTML(value) {
 
-    return String(value ?? "")
+    return String(
+        value ?? ""
+    )
         .replace(
             /&/g,
             "&amp;"
@@ -535,6 +544,26 @@ function escapeHTML(value) {
             /'/g,
             "&#039;"
         );
+}
+
+
+function stripHTML(value) {
+
+    const temp =
+        document.createElement(
+            "div"
+        );
+
+    temp.innerHTML =
+        String(
+            value ?? ""
+        );
+
+    return (
+        temp.textContent ||
+        temp.innerText ||
+        ""
+    );
 }
 
 
@@ -604,14 +633,248 @@ function formatDateRange(
     }
 
     if (!end) {
-        return formatDate(start);
+        return formatDate(
+            start
+        );
     }
 
     return (
-        formatDate(start)
-        + " – "
-        + formatDate(end)
+        formatDate(start) +
+        " – " +
+        formatDate(end)
     );
+}
+
+
+/* =====================================================
+   STEAM INFO
+===================================================== */
+
+function resetSteamInfo() {
+
+    if (!steamInfoSection) {
+        return;
+    }
+
+    steamInfoLoading.classList.remove(
+        "hidden"
+    );
+
+    steamInfoContent.classList.add(
+        "hidden"
+    );
+
+    steamInfoEmpty.classList.add(
+        "hidden"
+    );
+
+    steamInfoImage.src =
+        "";
+
+    steamInfoImage.alt =
+        "";
+
+    steamInfoTitle.textContent =
+        "–";
+
+    steamInfoDescription.textContent =
+        "–";
+
+    steamInfoGenres.innerHTML =
+        "";
+
+    steamInfoDevelopers.textContent =
+        "–";
+
+    steamInfoPublishers.textContent =
+        "–";
+
+    steamInfoReleaseDate.textContent =
+        "–";
+
+    steamInfoWebsite.classList.add(
+        "hidden"
+    );
+
+    steamInfoWebsite.href =
+        "#";
+}
+
+
+function renderSteamInfo(
+    data
+) {
+
+    if (!steamInfoSection) {
+        return;
+    }
+
+    steamInfoLoading.classList.add(
+        "hidden"
+    );
+
+    if (
+        !data ||
+        !data.name
+    ) {
+
+        steamInfoContent.classList.add(
+            "hidden"
+        );
+
+        steamInfoEmpty.classList.remove(
+            "hidden"
+        );
+
+        return;
+    }
+
+    steamInfoContent.classList.remove(
+        "hidden"
+    );
+
+    steamInfoEmpty.classList.add(
+        "hidden"
+    );
+
+
+    /* =================================================
+       TITLE
+    ================================================= */
+
+    steamInfoTitle.textContent =
+        data.name ||
+        "Okänt spel";
+
+
+    /* =================================================
+       DESCRIPTION
+    ================================================= */
+
+    steamInfoDescription.textContent =
+        stripHTML(
+            data.short_description
+        ) ||
+        "Ingen beskrivning finns tillgänglig.";
+
+
+    /* =================================================
+       IMAGE
+    ================================================= */
+
+    if (
+        data.header_image
+    ) {
+
+        steamInfoImage.src =
+            data.header_image;
+
+        steamInfoImage.alt =
+            `${data.name} – Steam`;
+    }
+
+
+    /* =================================================
+       DEVELOPERS
+    ================================================= */
+
+    steamInfoDevelopers.textContent =
+        Array.isArray(
+            data.developers
+        ) &&
+        data.developers.length > 0
+            ? data.developers.join(
+                ", "
+            )
+            : "–";
+
+
+    /* =================================================
+       PUBLISHERS
+    ================================================= */
+
+    steamInfoPublishers.textContent =
+        Array.isArray(
+            data.publishers
+        ) &&
+        data.publishers.length > 0
+            ? data.publishers.join(
+                ", "
+            )
+            : "–";
+
+
+    /* =================================================
+       RELEASE DATE
+    ================================================= */
+
+    steamInfoReleaseDate.textContent =
+        data.release_date ||
+        "–";
+
+
+    /* =================================================
+       GENRES
+    ================================================= */
+
+    steamInfoGenres.innerHTML =
+        "";
+
+    if (
+        Array.isArray(
+            data.genres
+        ) &&
+        data.genres.length > 0
+    ) {
+
+        data.genres.forEach(
+            genre => {
+
+                const tag =
+                    document.createElement(
+                        "span"
+                    );
+
+                tag.className =
+                    "steam-info-genre";
+
+                tag.textContent =
+                    genre;
+
+                steamInfoGenres.appendChild(
+                    tag
+                );
+            }
+        );
+
+    }
+
+
+    /* =================================================
+       WEBSITE
+    ================================================= */
+
+    if (
+        data.website
+    ) {
+
+        steamInfoWebsite.href =
+            data.website;
+
+        steamInfoWebsite.classList.remove(
+            "hidden"
+        );
+    }
+
+    else {
+
+        steamInfoWebsite.classList.add(
+            "hidden"
+        );
+
+        steamInfoWebsite.href =
+            "#";
+    }
 }
 
 
@@ -619,9 +882,7 @@ function formatDateRange(
    PROTONDB HELPERS
 ===================================================== */
 
-function formatProtonTier(
-    tier
-) {
+function formatProtonTier(tier) {
 
     if (!tier) {
         return "Okänd";
@@ -686,9 +947,7 @@ function formatProtonScore(
         Number(value);
 
     if (
-        !Number.isFinite(
-            score
-        )
+        !Number.isFinite(score)
     ) {
         return "–";
     }
@@ -778,7 +1037,6 @@ function renderProtonCheck(
         return;
     }
 
-
     protonContent.classList.remove(
         "hidden"
     );
@@ -787,46 +1045,41 @@ function renderProtonCheck(
         "hidden"
     );
 
-
     protonStatus.textContent =
         formatProtonTier(
             data.status
         );
-
 
     protonConfidence.textContent =
         formatProtonConfidence(
             data.confidence
         );
 
-
     protonScore.textContent =
         formatProtonScore(
             data.score
         );
 
-
     protonReports.textContent =
         Number.isFinite(
             Number(data.reports)
         )
-            ? Number(data.reports).toLocaleString(
+            ? Number(
+                data.reports
+            ).toLocaleString(
                 "sv-SE"
             )
             : "–";
-
 
     protonTrending.textContent =
         formatProtonTier(
             data.trending
         );
 
-
     protonBest.textContent =
         formatProtonTier(
             data.best_reported
         );
-
 
     if (
         data.protondb_url
@@ -852,7 +1105,6 @@ async function loadProtonCheck(
 
     resetProtonPanel();
 
-
     if (
         !game ||
         !game.steam_appid
@@ -869,20 +1121,20 @@ async function loadProtonCheck(
         return;
     }
 
-
     try {
 
         const data =
             await fetchJSON(
-                `${API}/proton-check?appid=${encodeURIComponent(game.steam_appid)}`
+                `${API}/proton-check?appid=${encodeURIComponent(
+                    game.steam_appid
+                )}`
             );
-
 
         renderProtonCheck(
             data
         );
-
     }
+
     catch (error) {
 
         console.warn(
@@ -909,7 +1161,9 @@ async function loadProtonCheck(
    GAME IMAGE
 ===================================================== */
 
-function getGameImage(game) {
+function getGameImage(
+    game
+) {
 
     const assets =
         game?.assets;
@@ -919,7 +1173,8 @@ function getGameImage(game) {
     }
 
     if (
-        typeof assets.banner600 === "string" &&
+        typeof assets.banner600 ===
+        "string" &&
         /^https?:\/\//i.test(
             assets.banner600
         )
@@ -928,7 +1183,8 @@ function getGameImage(game) {
     }
 
     if (
-        typeof assets.banner400 === "string" &&
+        typeof assets.banner400 ===
+        "string" &&
         /^https?:\/\//i.test(
             assets.banner400
         )
@@ -937,7 +1193,8 @@ function getGameImage(game) {
     }
 
     if (
-        typeof assets.banner300 === "string" &&
+        typeof assets.banner300 ===
+        "string" &&
         /^https?:\/\//i.test(
             assets.banner300
         )
@@ -946,7 +1203,8 @@ function getGameImage(game) {
     }
 
     if (
-        typeof assets.boxart === "string" &&
+        typeof assets.boxart ===
+        "string" &&
         /^https?:\/\//i.test(
             assets.boxart
         )
@@ -954,8 +1212,9 @@ function getGameImage(game) {
         return assets.boxart;
     }
 
-
-    function findImage(value) {
+    function findImage(
+        value
+    ) {
 
         if (!value) {
             return null;
@@ -975,7 +1234,8 @@ function getGameImage(game) {
         ) {
 
             for (
-                const key of Object.keys(value)
+                const key of
+                Object.keys(value)
             ) {
 
                 const result =
@@ -991,7 +1251,6 @@ function getGameImage(game) {
 
         return null;
     }
-
 
     return findImage(
         assets
@@ -1075,8 +1334,8 @@ async function fetchJSON(
             await fetch(
                 url
             );
-
     }
+
     catch (error) {
 
         throw new Error(
@@ -1090,8 +1349,8 @@ async function fetchJSON(
 
         data =
             await response.json();
-
     }
+
     catch {
 
         data = null;
@@ -1129,8 +1388,8 @@ function setSearchLoading(
         searchButtonSpinner.classList.remove(
             "hidden"
         );
-
     }
+
     else {
 
         searchButtonText.classList.remove(
@@ -1157,25 +1416,27 @@ function renderSteamLibrary() {
         return;
     }
 
-
     const games =
         Array.from(
             steamLibrary.values()
         ).sort(
             (a, b) =>
-                String(a.name || "")
-                    .localeCompare(
-                        String(b.name || ""),
-                        "sv"
-                    )
+                String(
+                    a.name || ""
+                ).localeCompare(
+                    String(
+                        b.name || ""
+                    ),
+                    "sv"
+                )
         );
-
 
     steamLibraryCount.textContent =
         `${games.length} spel i biblioteket`;
 
-
-    if (games.length === 0) {
+    if (
+        games.length === 0
+    ) {
 
         steamLibraryGrid.innerHTML = `
             <div class="steam-library-empty">
@@ -1186,7 +1447,6 @@ function renderSteamLibrary() {
         return;
     }
 
-
     steamLibraryGrid.innerHTML =
         games.map(
             game => {
@@ -1196,14 +1456,14 @@ function renderSteamLibrary() {
                         game
                     );
 
-
                 return `
                     <button
                         type="button"
                         class="steam-library-card"
-                        data-steam-appid="${escapeHTML(game.appid)}"
+                        data-steam-appid="${escapeHTML(
+                            game.appid
+                        )}"
                     >
-
                         <h3>
                             ${escapeHTML(
                                 game.name ||
@@ -1211,22 +1471,17 @@ function renderSteamLibrary() {
                             )}
                         </h3>
 
-
                         <span class="${status.className}">
                             ${status.text}
                         </span>
 
-
                         <span class="steam-library-card-arrow">
                             →
                         </span>
-
                     </button>
                 `;
             }
-        )
-        .join("");
-
+        ).join("");
 
     steamLibraryGrid
         .querySelectorAll(
@@ -1243,17 +1498,18 @@ function renderSteamLibrary() {
                             card.dataset.steam_appid ||
                             card.dataset.steamAppid;
 
-
                         const libraryGame =
                             steamLibrary.get(
-                                String(appid)
+                                String(
+                                    appid
+                                )
                             );
 
-
-                        if (!libraryGame) {
+                        if (
+                            !libraryGame
+                        ) {
                             return;
                         }
-
 
                         openLibraryGame(
                             libraryGame
@@ -1302,14 +1558,14 @@ async function searchGames() {
         "hidden"
     );
 
-
     try {
 
         const data =
             await fetchJSON(
-                `${API}/search?query=${encodeURIComponent(query)}`
+                `${API}/search?query=${encodeURIComponent(
+                    query
+                )}`
             );
-
 
         if (
             !data.games ||
@@ -1327,15 +1583,14 @@ async function searchGames() {
             return;
         }
 
-
         renderSearchResults(
             data.games
         );
 
         searchStatus.textContent =
             `${data.games.length} resultat hittades.`;
-
     }
+
     catch (error) {
 
         showError(
@@ -1345,8 +1600,8 @@ async function searchGames() {
 
         searchStatus.textContent =
             "";
-
     }
+
     finally {
 
         setSearchLoading(
@@ -1367,7 +1622,6 @@ function renderSearchResults(
     resultsGrid.innerHTML =
         "";
 
-
     games.forEach(
         game => {
 
@@ -1382,25 +1636,38 @@ function renderSearchResults(
             card.className =
                 "game-result-card";
 
-
             const image =
                 getGameImage(
                     game
                 );
 
-
             if (image) {
 
                 card.style.backgroundImage =
-                    `url("${image.replaceAll('"', '\\"')}")`;
+                    `url("${image.replaceAll(
+                        '"',
+                        '\\"'
+                    )}")`;
             }
-
 
             const installed =
                 isGameInstalled(
                     game
                 );
 
+            const libraryGame =
+                game.steam_appid
+                    ? steamLibrary.get(
+                        String(
+                            game.steam_appid
+                        )
+                    )
+                    : null;
+
+            const owned =
+                Boolean(
+                    libraryGame
+                );
 
             const installedBadge =
                 installed
@@ -1409,12 +1676,17 @@ function renderSearchResults(
                             ✓ INSTALLERAD
                         </span>
                     `
-                    : `
-                        <span class="game-library-status not-installed">
-                            INTE I BIBLIOTEKET
-                        </span>
-                    `;
-
+                    : owned
+                        ? `
+                            <span class="game-library-status in-library">
+                                ✓ I BIBLIOTEKET
+                            </span>
+                        `
+                        : `
+                            <span class="game-library-status not-installed">
+                                INTE I BIBLIOTEKET
+                            </span>
+                        `;
 
             card.innerHTML = `
                 <div class="game-result-overlay">
@@ -1442,24 +1714,20 @@ function renderSearchResults(
                 </div>
             `;
 
-
             card.addEventListener(
                 "click",
                 () => {
-
                     analyzeGame(
                         game
                     );
                 }
             );
 
-
             resultsGrid.appendChild(
                 card
             );
         }
     );
-
 
     resultsSection.classList.remove(
         "hidden"
@@ -1482,11 +1750,11 @@ async function analyzeGame(
 
     hideError();
 
-    /*
-     * När ett spel analyseras ska
-     * Steam-biblioteket inte längre
-     * ligga kvar på sidan.
-     */
+    window.currentAnalyzedGame =
+        game;
+
+    resetSteamInfo();
+
     hideSteamLibrary();
 
     resultsSection.classList.add(
@@ -1506,25 +1774,62 @@ async function analyzeGame(
         block: "start"
     });
 
-
     try {
 
-        const data =
-            await fetchJSON(
-                `${API}/predict?title=${encodeURIComponent(game.title)}&game_id=${encodeURIComponent(game.id)}`
+        const predictionPromise =
+            fetchJSON(
+                `${API}/predict?title=${encodeURIComponent(
+                    game.title
+                )}&game_id=${encodeURIComponent(
+                    game.id
+                )}`
             );
 
+        const steamPromise =
+            game.steam_appid
+                ? fetchJSON(
+                    `${API}/steam/game?appid=${encodeURIComponent(
+                        game.steam_appid
+                    )}`
+                )
+                : Promise.reject(
+                    new Error(
+                        "Inget Steam AppID."
+                    )
+                );
 
-        await loadExchangeRate(
-            data
-        );
+        const protonPromise =
+            game.steam_appid
+                ? fetchJSON(
+                    `${API}/proton-check?appid=${encodeURIComponent(
+                        game.steam_appid
+                    )}`
+                )
+                : Promise.reject(
+                    new Error(
+                        "Inget Steam AppID."
+                    )
+                );
 
+        const [
+            predictionResult,
+            steamResult,
+            protonResult
+        ] = await Promise.allSettled([
+            predictionPromise,
+            steamPromise,
+            protonPromise
+        ]);
+
+
+        /* =================================================
+           GAME IMAGE
+        ================================================= */
 
         const image =
             getGameImage(
                 game
             );
-
 
         if (image) {
 
@@ -1534,10 +1839,142 @@ async function analyzeGame(
         }
 
 
-        renderPrediction(
-            data
-        );
+        /* =================================================
+           STEAM INFO
+        ================================================= */
 
+        if (
+            steamResult.status ===
+            "fulfilled"
+        ) {
+
+            renderSteamInfo(
+                steamResult.value
+            );
+
+            if (
+                !image &&
+                steamResult.value.header_image
+            ) {
+
+                setGameHeroImage(
+                    steamResult.value.header_image
+                );
+            }
+
+        }
+
+        else {
+
+            console.warn(
+                "Steam-info kunde inte hämtas:",
+                steamResult.reason
+            );
+
+            steamInfoLoading.classList.add(
+                "hidden"
+            );
+
+            steamInfoContent.classList.add(
+                "hidden"
+            );
+
+            steamInfoEmpty.classList.remove(
+                "hidden"
+            );
+        }
+
+
+        /* =================================================
+           SALE PREDICTOR
+        ================================================= */
+
+        if (
+            predictionResult.status ===
+            "fulfilled"
+        ) {
+
+            const data =
+                predictionResult.value;
+
+            await loadExchangeRate(
+                data
+            );
+
+            renderPrediction(
+                data
+            );
+
+        }
+
+        else {
+
+            console.log(
+                "Ingen prognos tillgänglig:",
+                predictionResult.reason
+            );
+
+            const emptyPrediction = {
+                title:
+                    steamResult.status ===
+                    "fulfilled"
+                        ? steamResult.value.name
+                        : game.title,
+
+                events: 0,
+
+                current:
+                    null,
+
+                regular:
+                    null,
+
+                likely:
+                    null,
+
+                confidence:
+                    null,
+
+                confidence_label:
+                    "Ingen prognos tillgänglig",
+
+                probabilities:
+                    null,
+
+                history:
+                    [],
+
+                best_discount:
+                    null,
+
+                lowest_price:
+                    null,
+
+                lowest_price_date:
+                    null,
+
+                last_sale:
+                    null,
+
+                currency:
+                    TARGET_CURRENCY,
+
+                next_start:
+                    null,
+
+                next_end:
+                    null
+            };
+
+            renderPrediction(
+                emptyPrediction
+            );
+        }
+
+
+        /* =================================================
+           SHOW GAME
+        ================================================= */
 
         loadingSection.classList.add(
             "hidden"
@@ -1547,29 +1984,55 @@ async function analyzeGame(
             "hidden"
         );
 
-
         gameSection.scrollIntoView({
-            behavior:
-                "smooth",
-            block:
-                "start"
+            behavior: "smooth",
+            block: "start"
         });
 
 
-        /*
-         * ProtonDB laddas efter att
-         * själva analysen har visats.
-         *
-         * Detta fungerar även för spel
-         * som inte är installerade.
-         */
+        /* =================================================
+           PROTONDB
+        ================================================= */
 
-        loadProtonCheck(
-            game
-        );
+        if (
+            protonResult.status ===
+            "fulfilled"
+        ) {
+
+            renderProtonCheck(
+                protonResult.value
+            );
+
+        }
+
+        else {
+
+            console.warn(
+                "ProtonDB kunde inte hämtas:",
+                protonResult.reason
+            );
+
+            protonLoading.classList.add(
+                "hidden"
+            );
+
+            protonContent.classList.add(
+                "hidden"
+            );
+
+            protonEmpty.classList.remove(
+                "hidden"
+            );
+        }
 
     }
+
     catch (error) {
+
+        console.error(
+            "Analysen kunde inte slutföras:",
+            error
+        );
 
         loadingSection.classList.add(
             "hidden"
@@ -1598,57 +2061,55 @@ async function loadExchangeRate(
         return;
     }
 
-
     if (
         !data.currency ||
-        data.currency === TARGET_CURRENCY
+        data.currency ===
+        TARGET_CURRENCY
     ) {
         return;
     }
-
 
     try {
 
         const rateData =
             await fetchJSON(
-                `${API}/exchange-rate?base=${encodeURIComponent(data.currency)}&target=${TARGET_CURRENCY}`
+                `${API}/exchange-rate?base=${encodeURIComponent(
+                    data.currency
+                )}&target=${TARGET_CURRENCY}`
             );
-
 
         const rate =
             Number(
                 rateData.rate
             );
 
-
         if (
-            !Number.isFinite(
-                rate
-            )
+            !Number.isFinite(rate)
         ) {
             return;
         }
-
 
         if (
             data.current !== null
         ) {
 
             data.current =
-                Number(data.current) *
+                Number(
+                    data.current
+                ) *
                 rate;
         }
-
 
         if (
             data.regular !== null
         ) {
 
             data.regular =
-                Number(data.regular) *
+                Number(
+                    data.regular
+                ) *
                 rate;
         }
-
 
         if (
             data.lowest_price !== null &&
@@ -1656,19 +2117,19 @@ async function loadExchangeRate(
         ) {
 
             data.lowest_price =
-                Number(data.lowest_price) *
+                Number(
+                    data.lowest_price
+                ) *
                 rate;
         }
 
-
         data.currency =
             TARGET_CURRENCY;
-
     }
+
     catch {
 
         /* Fortsätt med originalvalutan. */
-
     }
 }
 
@@ -1685,10 +2146,8 @@ function renderPrediction(
         data.title ||
         "Okänt spel";
 
-
     gameSubtitle.textContent =
         `${data.events || 0} identifierade rea-händelser`;
-
 
     currentPrice.textContent =
         formatPrice(
@@ -1696,28 +2155,28 @@ function renderPrediction(
             data.currency
         );
 
-
     if (
         data.regular !== null &&
         data.regular !== undefined
     ) {
 
         regularPrice.textContent =
-            `Ordinarie pris: ${formatPrice(data.regular, data.currency)}`;
-
+            `Ordinarie pris: ${formatPrice(
+                data.regular,
+                data.currency
+            )}`;
     }
+
     else {
 
         regularPrice.textContent =
             "Ordinarie pris saknas";
     }
 
-
     likelyDiscount.textContent =
         data.likely !== null
             ? `${data.likely}%`
             : "–";
-
 
     if (
         data.regular !== null &&
@@ -1725,23 +2184,29 @@ function renderPrediction(
     ) {
 
         const predicted =
-            Number(data.regular) *
+            Number(
+                data.regular
+            ) *
             (
                 1 -
-                Number(data.likely) / 100
+                Number(
+                    data.likely
+                ) /
+                100
             );
 
-
         predictedPrice.textContent =
-            `Prognostiserat pris: ${formatPrice(predicted, data.currency)}`;
-
+            `Prognostiserat pris: ${formatPrice(
+                predicted,
+                data.currency
+            )}`;
     }
+
     else {
 
         predictedPrice.textContent =
             "Pris kunde inte beräknas";
     }
-
 
     nextSale.textContent =
         formatDateRange(
@@ -1749,30 +2214,25 @@ function renderPrediction(
             data.next_end
         );
 
-
     confidence.textContent =
         data.confidence !== null
             ? `${data.confidence}%`
             : "–";
 
-
     confidenceLabel.textContent =
         data.confidence_label ||
         "Ingen bedömning";
-
 
     modelScore.textContent =
         data.confidence !== null
             ? `${data.confidence}%`
             : "–";
 
-
     bestDiscount.textContent =
         data.best_discount !== null &&
         data.best_discount !== undefined
             ? `${data.best_discount}%`
             : "–";
-
 
     lowestPrice.textContent =
         data.lowest_price !== null &&
@@ -1783,7 +2243,6 @@ function renderPrediction(
             )
             : "–";
 
-
     if (
         data.last_sale &&
         data.last_sale.date
@@ -1793,18 +2252,17 @@ function renderPrediction(
             formatDate(
                 data.last_sale.date
             );
-
     }
+
     else {
 
         lastSale.textContent =
             "–";
     }
 
-
     saleCount.textContent =
-        data.events ?? "–";
-
+        data.events ??
+        "–";
 
     renderProbabilities(
         data
@@ -1827,7 +2285,6 @@ function renderProbabilities(
     probabilityList.innerHTML =
         "";
 
-
     if (
         !data.probabilities
     ) {
@@ -1841,21 +2298,19 @@ function renderProbabilities(
         return;
     }
 
-
     const entries =
         Object.entries(
             data.probabilities
         )
-        .sort(
-            (
-                a,
-                b
-            ) =>
-                Number(b[1])
-                -
-                Number(a[1])
-        );
-
+            .sort(
+                (a, b) =>
+                    Number(
+                        b[1]
+                    ) -
+                    Number(
+                        a[1]
+                    )
+            );
 
     entries.forEach(
         ([discount, probability]) => {
@@ -1864,7 +2319,6 @@ function renderProbabilities(
                 Number(
                     probability
                 );
-
 
             const percentage =
                 Math.max(
@@ -1875,26 +2329,27 @@ function renderProbabilities(
                     )
                 );
 
-
             const row =
                 document.createElement(
                     "div"
                 );
 
-
             row.className =
                 "probability-row";
-
 
             row.innerHTML = `
                 <div class="probability-top">
 
                     <span>
-                        ${escapeHTML(discount)}% rabatt
+                        ${escapeHTML(
+                            discount
+                        )}% rabatt
                     </span>
 
                     <strong>
-                        ${percentage.toFixed(1)}%
+                        ${percentage.toFixed(
+                            1
+                        )}%
                     </strong>
 
                 </div>
@@ -1908,7 +2363,6 @@ function renderProbabilities(
 
                 </div>
             `;
-
 
             probabilityList.appendChild(
                 row
@@ -1931,30 +2385,26 @@ function renderChart(
             "priceChart"
         );
 
-
     if (!canvas) {
         return;
     }
-
 
     if (priceChart) {
 
         priceChart.destroy();
 
-        priceChart = null;
+        priceChart =
+            null;
     }
-
 
     const history =
         data.history || [];
-
 
     if (
         history.length === 0
     ) {
         return;
     }
-
 
     const labels =
         history.map(
@@ -1964,7 +2414,6 @@ function renderChart(
                 )
         );
 
-
     const prices =
         history.map(
             item =>
@@ -1972,7 +2421,6 @@ function renderChart(
                     item.price
                 )
         );
-
 
     const regular =
         history.map(
@@ -1982,15 +2430,15 @@ function renderChart(
                 )
         );
 
-
     const salePrices =
         history.map(
             item =>
                 item.discount > 0
-                    ? Number(item.price)
+                    ? Number(
+                        item.price
+                    )
                     : null
         );
-
 
     priceChart =
         new Chart(
@@ -2005,63 +2453,35 @@ function renderChart(
                     datasets: [
 
                         {
-                            label:
-                                "Pris",
-
-                            data:
-                                prices,
-
-                            tension:
-                                0.25,
-
-                            borderWidth:
-                                2,
-
-                            pointRadius:
-                                3
+                            label: "Pris",
+                            data: prices,
+                            tension: 0.25,
+                            borderWidth: 2,
+                            pointRadius: 3
                         },
 
                         {
-                            label:
-                                "Ordinarie pris",
-
-                            data:
-                                regular,
-
-                            tension:
-                                0.25,
-
-                            borderWidth:
-                                1,
-
-                            pointRadius:
-                                0
+                            label: "Ordinarie pris",
+                            data: regular,
+                            tension: 0.25,
+                            borderWidth: 1,
+                            pointRadius: 0
                         },
 
                         {
-                            label:
-                                "Reapris",
-
-                            data:
-                                salePrices,
-
-                            tension:
-                                0.25,
-
-                            borderWidth:
-                                3,
-
-                            pointRadius:
-                                4
+                            label: "Reapris",
+                            data: salePrices,
+                            tension: 0.25,
+                            borderWidth: 3,
+                            pointRadius: 4
                         }
+
                     ]
                 },
 
-
                 options: {
 
-                    responsive:
-                        true,
+                    responsive: true,
 
                     maintainAspectRatio:
                         false,
@@ -2075,7 +2495,6 @@ function renderChart(
                             false
                     },
 
-
                     plugins: {
 
                         legend: {
@@ -2087,7 +2506,6 @@ function renderChart(
                             }
                         }
                     },
-
 
                     scales: {
 
@@ -2102,14 +2520,12 @@ function renderChart(
                                     45
                             },
 
-
                             grid: {
 
                                 color:
                                     "rgba(255,255,255,.05)"
                             }
                         },
-
 
                         y: {
 
@@ -2125,7 +2541,6 @@ function renderChart(
                                             data.currency
                                         )
                             },
-
 
                             grid: {
 
@@ -2160,22 +2575,19 @@ function resetSearch() {
 
     hideError();
 
-
     resetProtonPanel();
 
-    showSteamLibrary();
+    resetSteamInfo();
 
+    showSteamLibrary();
 
     searchInput.value =
         "";
 
-
     searchStatus.textContent =
         "";
 
-
     searchInput.focus();
-
 
     window.scrollTo({
         top: 0,
@@ -2193,12 +2605,10 @@ searchButton.addEventListener(
     searchGames
 );
 
-
 newSearchButton.addEventListener(
     "click",
     resetSearch
 );
-
 
 searchInput.addEventListener(
     "keydown",
@@ -2207,7 +2617,6 @@ searchInput.addEventListener(
         if (
             event.key === "Enter"
         ) {
-
             searchGames();
         }
     }

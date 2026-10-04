@@ -11,7 +11,7 @@ from core.api import (
 )
 
 from core.predictor import predict
-from core.steam import get_owned_games
+from core.steam import get_owned_games, get_game_details
 from core.proton import check_proton
 
 
@@ -415,6 +415,36 @@ def steam_library():
             status_code=500,
             detail=
                 f"Steam Library kunde inte hämtas: {error}"
+        )
+
+
+@app.get("/steam/game")
+def steam_game(
+    appid: str
+):
+    try:
+        return get_game_details(
+            appid
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
+
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error)
+        )
+
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail=
+                "Ett oväntat fel uppstod "
+                "när Steam-informationen hämtades."
         )
 
 

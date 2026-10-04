@@ -605,3 +605,76 @@ def add_app_metadata(games):
     )
 
     return result
+
+def get_game_details(appid):
+    appid = str(appid).strip()
+
+    if not appid:
+        raise ValueError(
+            "Steam AppID saknas."
+        )
+
+    details = _get_steam_app_details(
+        appid
+    )
+
+    if not details:
+        raise RuntimeError(
+            "Steam kunde inte hämta "
+            "information om spelet."
+        )
+
+    return {
+        "appid": appid,
+        "name": details.get(
+            "name",
+            "Okänt spel"
+        ),
+        "type": details.get(
+            "type",
+            "unknown"
+        ),
+        "short_description": details.get(
+            "short_description",
+            ""
+        ),
+        "header_image": details.get(
+            "header_image"
+        ),
+        "developers": details.get(
+            "developers",
+            []
+        ),
+        "publishers": details.get(
+            "publishers",
+            []
+        ),
+        "genres": [
+            genre.get("description")
+            for genre in details.get(
+                "genres",
+                []
+            )
+            if isinstance(genre, dict)
+            and genre.get("description")
+        ],
+        "release_date": (
+            details.get(
+                "release_date",
+                {}
+            ).get(
+                "date"
+            )
+            if isinstance(
+                details.get(
+                    "release_date",
+                    {}
+                ),
+                dict
+            )
+            else None
+        ),
+        "website": details.get(
+            "website"
+        ),
+    }

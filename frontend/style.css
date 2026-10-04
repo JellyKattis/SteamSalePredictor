@@ -2179,6 +2179,421 @@ img {
     border-radius: 8px;
 }
 
+/* =====================================================
+   STEAM INFO
+===================================================== */
+
+.steam-info-panel {
+    margin-top: 13px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17, 29, 40, 0.98),
+            rgba(10, 18, 25, 0.98)
+        );
+
+    border-color:
+        rgba(102, 192, 244, 0.16);
+}
+
+.steam-info-panel::before {
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(102, 192, 244, 0.32),
+            rgba(125, 211, 255, 0.18),
+            transparent
+        );
+}
+
+
+/* =====================================================
+   LOADING / EMPTY
+===================================================== */
+
+.steam-info-loading {
+    min-height: 80px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.steam-info-loading::before {
+    content: "";
+
+    width: 15px;
+    height: 15px;
+
+    border:
+        2px solid
+        rgba(102, 192, 244, 0.2);
+
+    border-top-color:
+        var(--blue);
+
+    border-radius: 50%;
+
+    animation:
+        spin 0.8s linear infinite;
+}
+
+.steam-info-empty {
+    padding: 20px;
+
+    color: var(--muted);
+
+    text-align: center;
+
+    font-size: 11px;
+
+    background:
+        rgba(6, 12, 17, 0.35);
+
+    border:
+        1px solid
+        rgba(120, 165, 198, 0.08);
+
+    border-radius: 8px;
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.steam-info-content {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+.steam-info-main {
+    display: grid;
+
+    grid-template-columns:
+        270px
+        minmax(0, 1fr);
+
+    gap: 22px;
+
+    align-items: start;
+}
+
+
+/* =====================================================
+   IMAGE
+===================================================== */
+
+.steam-info-image {
+    display: block;
+
+    width: 100%;
+
+    aspect-ratio: 16 / 9;
+
+    object-fit: cover;
+
+    background:
+        #0a1118;
+
+    border:
+        1px solid
+        rgba(120, 165, 198, 0.16);
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.28);
+
+    transition:
+        border-color var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.steam-info-image:hover {
+    border-color:
+        rgba(102, 192, 244, 0.35);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 35px
+        rgba(0, 0, 0, 0.35);
+}
+
+
+/* =====================================================
+   DETAILS
+===================================================== */
+
+.steam-info-details {
+    min-width: 0;
+
+    padding-top: 2px;
+}
+
+.steam-info-details h3 {
+    margin: 0 0 10px;
+
+    color: #f1f5f8;
+
+    font-size: 22px;
+
+    font-weight: 600;
+
+    letter-spacing: -0.02em;
+
+    line-height: 1.2;
+}
+
+.steam-info-description {
+    max-width: 760px;
+
+    margin: 0;
+
+    color: #98a7b3;
+
+    font-size: 12px;
+
+    line-height: 1.75;
+}
+
+
+/* =====================================================
+   GENRES
+===================================================== */
+
+.steam-info-genres {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 17px;
+}
+
+.steam-info-genre {
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 25px;
+
+    padding: 4px 9px;
+
+    background:
+        rgba(102, 192, 244, 0.07);
+
+    border:
+        1px solid
+        rgba(102, 192, 244, 0.16);
+
+    color: #91c9e9;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.06em;
+
+    border-radius: 5px;
+
+    transition:
+        background var(--transition),
+        border-color var(--transition),
+        color var(--transition);
+}
+
+.steam-info-genre:hover {
+    background:
+        rgba(102, 192, 244, 0.12);
+
+    border-color:
+        rgba(102, 192, 244, 0.32);
+
+    color: var(--blue-bright);
+}
+
+
+/* =====================================================
+   STATS
+===================================================== */
+
+.steam-info-stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 10px;
+}
+
+.steam-info-stat {
+    min-height: 78px;
+
+    padding: 14px;
+
+    background:
+        rgba(6, 12, 17, 0.5);
+
+    border:
+        1px solid
+        rgba(120, 165, 198, 0.1);
+
+    border-radius: 8px;
+
+    transition:
+        border-color var(--transition),
+        background var(--transition);
+}
+
+.steam-info-stat:hover {
+    background:
+        rgba(15, 27, 38, 0.72);
+
+    border-color:
+        rgba(102, 192, 244, 0.2);
+}
+
+.steam-info-stat span {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #657482;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.12em;
+}
+
+.steam-info-stat strong {
+    display: block;
+
+    overflow-wrap: anywhere;
+
+    color: #e7edf2;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    line-height: 1.45;
+}
+
+
+/* =====================================================
+   ACTIONS
+===================================================== */
+
+.steam-info-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding-top: 1px;
+}
+
+.steam-info-actions .secondary-button {
+    min-height: 34px;
+}
+
+
+/* =====================================================
+   RESPONSIVE — STEAM INFO
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .steam-info-main {
+        grid-template-columns: 1fr;
+
+        gap: 17px;
+    }
+
+    .steam-info-image {
+        width: min(
+            100%,
+            500px
+        );
+
+        margin: 0 auto;
+    }
+
+    .steam-info-details h3 {
+        font-size: 19px;
+    }
+
+    .steam-info-stats {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .steam-info-main {
+        gap: 15px;
+    }
+
+    .steam-info-description {
+        font-size: 11px;
+
+        line-height: 1.7;
+    }
+
+    .steam-info-genres {
+        gap: 6px;
+
+        margin-top: 14px;
+    }
+
+    .steam-info-genre {
+        min-height: 23px;
+
+        padding: 4px 8px;
+
+        font-size: 7px;
+    }
+
+    .steam-info-stat {
+        min-height: 70px;
+
+        padding: 12px;
+    }
+
+    .steam-info-actions {
+        width: 100%;
+    }
+
+    .steam-info-actions .secondary-button {
+        width: 100%;
+    }
+}
 
 /* =====================================================
    MODEL
